@@ -120,7 +120,7 @@ class SomeTestCase(unittest.TestCase):
 
     def setUp(self):
         some_fixture_function()
-        SomeFixtureLib.do_something()
+        SomeFixtureClass().do_something()
 
     def test_something(self):
         ....
@@ -137,102 +137,91 @@ class SomeTestCase(unittest.TestCase):
                 </section>
                 <section>
                     <h2>Pytest fixture mechanism</h2>
-                    <p class="fragment" style="text-align: left;">(Automatic) dependency injection of fixture inside test</p>
-                    <pre class="fragment"><code data-trim contenteditable>
+                    <p style="text-align: left;">(Automatic) dependency injection of fixture inside test</p>
+                    <pre><code data-trim contenteditable>
 import pytest
 
 @pytest.fixture
-def dbconn():
-    conn = create_some_db_connection()
-    return conn
+def dewpoint_service():
+    dewpoint = Dewpoint()
+    dewpoint.start()
+    return dewpoint
 
-def test_dummy(dbconn):
-    result = dbconn.make_some_query()
-    assert result == something
-                    </code></pre>
-                </section>
-                <section>
-                    <h2>Fixtures can do inception</h2>
-                    <p class="fragment" style="text-align: left;">Use a fixture from a fixture : </p>
-                    <pre class="fragment"><code data-trim contenteditable>
-@pytest.fixture
-def dbconn():
-    conn = create_some_db_connection()
-    return conn
-
-@pytest.fixture
-def dbconn_trans(dbconn):
-    start_a_transaction(dbconn)
-    return dbconn
-
-def test_insert_some_things(dbconn_trans):
-    dbconn_trans.insert_something()
-    result = dbconn.query_that_thing()
-    assert result == something
-                    </code></pre>
-                </section>
-                <section>
-                    <h2>Fixtures scope</h2>
-                    <p class="fragment" style="text-align: left;">Control fixture invocation : </p>
-                    <pre class="fragment"><code data-trim contenteditable>
-@pytest.fixture(scope="module")
-def dbconn():
-    conn = create_some_db_connection()
-    return conn
-
-@pytest.fixture
-def dbconn_trans(dbconn):
-    start_a_transaction(dbconn)
-    return dbconn
-
-def test_insert_some_things(dbconn_trans):
-    dbconn_trans.insert_something()
-    result = dbconn.query_that_thing()
-    assert result == something
+def test_dummy(dewpoint_service):
+    assert ping(dewpoint_service.url)
                     </code></pre>
                 </section>
                 <section>
                     <h2>Clean after yourself</h2>
-                        <p class="fragment" style="text-align: left;">They did not forget 'teardown' : </p>
-                        <pre class="fragment"><code data-trim contenteditable>
-@pytest.fixture(scope="module")
-def dbconn():
-    conn = create_some_db_connection()
-    return conn
+                        <p style="text-align: left;">They did not forget 'tearDown' : </p>
+                        <pre><code data-trim contenteditable>
+@pytest.fixture
+def dewpoint_service(request):
+    dewpoint = Dewpoint()
+    dewpoint.start()
+
+    def stop_dewpoint():
+        dewpoint.stop()
+
+    request.addfinalizer(stop_dewpoint)
+    return dewpoint
+
+def test_dummy(dewpoint_service):
+    assert ping(dewpoint_service.url)
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>Fixtures can do inception</h2>
+                    <p style="text-align: left;">Use a fixture from a fixture : </p>
+                    <pre><code data-trim contenteditable>
+@pytest.fixture
+def dewpoint_service():
+    ....
+    return dewpoint
 
 @pytest.fixture
-def dbconn_trans(dbconn, request):
-    start_a_transaction(dbconn)
-    def clean():
-        db_conn.release()
-    request.addfinalizer(fin)
-    return dbconn
+def dewpoint_container(dewpoint_service):
+    container_url = dewpoint_service.create_container()
+    return container_url        
 
-def test_insert_some_things(dbconn_trans):
-    dbconn_trans.insert_something()
-    result = dbconn.query_that_thing()
-    assert result == something
+def test_get_container(dewpoint_container):
+    assert 200 == request.get(dewpoint_container).status_code
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>Fixtures scope</h2>
+                    <p style="text-align: left;">Control fixture invocation : </p>
+                    <pre><code data-trim contenteditable>
+@pytest.fixture(scope="module")
+def dewpoint_service():
+    ....
+    return dewpoint
+
+@pytest.fixture
+def dewpoint_container(dewpoint_service):
+    container_url = dewpoint_service.create_container()
+    return container_url        
+
+def test_get_container(dewpoint_container):
+    assert 200 == request.get(dewpoint_container).status_code
                     </code></pre>
                 </section>
                 <section>
                     <h2>Parametrize it</h2>
-                        <p class="fragment" style="text-align: left;">This will run tests multiple times with different parameters</p>
-                        <pre class="fragment"><code data-trim contenteditable>
-@pytest.fixture(scope="module",
-                params=["postgres", "sqlite"])
-def dbconn(request):
-    conn = create_some_db_connection(request.param)
-    return conn
+                        <p style="text-align: left;">This will run tests multiple times with different parameters</p>
+                        <pre><code data-trim contenteditable>
+@pytest.fixture(scope="module", params=["mod-apache", "fcgi"])
+def dewpoint_service(request):
+    dewpoint = Dewpoint(mode=request.param)
+    dewpoint.start()
+    return dewpoint
 
 @pytest.fixture
-def dbconn_trans(dbconn):
-    start_a_transaction(dbconn)
-    return dbconn
+def dewpoint_container(dewpoint_service):
+    ...
 
-def test_insert_some_things(dbconn_trans):
-    dbconn_trans.insert_something()
-    result = dbconn.query_that_thing()
-    assert result == something
+def test_get_container(dewpoint_container):
+    assert 200 == request.get(dewpoint_container).status_code
                     </code></pre>
                 </section>
 				<section>
