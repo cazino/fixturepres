@@ -44,11 +44,23 @@
 					<h1>Pytest fixture mechanism</h1>
 				</section>
                 <section style="text-align: left;">
-                    <h1>Fixture : </h1>
-                    <p class="fragment">
-                        - A fixed state of the software under test used as a baseline for running tests
+                    <h1>Pytest : </h1>
+                    <p>
+                        - A python testing tool
                     </p>
-                    <p class="fragment">
+                    <p>
+                        - Active project, lot of features, pluggable architecture, great documentation
+                    </p>
+                    <p>
+                        - Focus on its fixture mechanism, pretty cool stuff
+                    </p>
+                </section>
+                <section style="text-align: left;">
+                    <h1>Fixture : </h1>
+                    <blockquote cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">
+                        &ldquo;A fixed state of the software under test used as a baseline for running tests&rdquo;
+                    </blockquote>
+                    <p>
                         - Availables in xUnit style libraries
                     </p>
                 </section>
@@ -69,52 +81,59 @@ class SomeTestCase(unittest.TestCase):
     def test_something(self):
         assert something
                     </code></pre>
-                    <p>setUp and tearDown executed before and after each test_ method.</p>
-                    <p>Can also be defined at class lavel, module level.</p>
+                    <p style="text-align: left;">- setUp and tearDown executed before and after each test_ method.</p>
+                    <p style="text-align: left;">- Can also be defined at class level, module level.</p>
                 </section>
                 <section style="text-align: left;">
                     <h2>Fixture code re-use in xUnit</h2>
-                    <p class="fragment">
-                        - Inherit from SomeTestCase class to use its fixtures
+                    <p>
+                        - Write a base test class and inherit from it
                     </p>
-                    <p class="fragment">
-                        - Bad idea : you get the fixture + every tests
-                    </p>
-                    <p class="fragment">
-                        - Write an abstract base class
-                    </p>
-                    <p class="fragment">
-                        - You have to write a base class for every fixture : not very modular.
-                    </p>
-                    <p class="fragment">
-                        - Extract fixture code and call it from setUp and teardDown
-                    </p>
-                    <p class="fragment">
-                        - Probably better
-                    </p>
-                </section>
-                <section>
-                    <h2>Some fixture library gets created</h2>
                     <pre><code data-trim contenteditable>
-class SomeFixtureLib:
-    .....
+class BaseTestCase(unittest.TestCase):
 
-class SomeTestCase(unittest.TestCase):
- 
     def setUp(self):
-        SomeFixtureLib.do_something
-        SomeFixtureLib.do_something_else
+        do_some_initialization
 
     def tearDown(self):
-        SomeFixtureLib.do_some_cleaning
-        SomeFixtureLib.do_some_more_cleaning
+        do_some_cleaning
+
+class ConcreteTestCase(BaseTestCase):
 
     def test_something(self):
-        assert something
-
+        ....
                     </code></pre>
-                    <p class="fragment" style="text-align: left;">Would work</p>
-                    <p class="fragment" style="text-align: left;">But every test initialization sequence is hardcoded in its class</p>
+                </section>
+                <section style="text-align: left;">
+                    <h2>Fixture code re-use in xUnit</h2>
+                    <p>
+                        - Extract fixture code and call it from setUp and teardDown
+                    </p>
+                    <pre><code data-trim contenteditable>
+def some_fixture_function():
+    ....
+
+class SomeFixtureClass:
+    ....
+
+class SomeTestCase(unittest.TestCase):
+
+    def setUp(self):
+        some_fixture_function()
+        SomeFixtureLib.do_something()
+
+    def test_something(self):
+        ....
+                    </code></pre>
+                </section>
+                <section style="text-align: left;">
+                    <h2>Problems</h2>
+                    <p>
+                        - Slightly different setUp requires to write a new class each time : that can end up with a large amount of not very readable code
+                    </p>
+                    <p>
+                        - What if I want to run the same tests under different 'fixture' cicumstances ?
+                    </p>
                 </section>
                 <section>
                     <h2>Pytest fixture mechanism</h2>
